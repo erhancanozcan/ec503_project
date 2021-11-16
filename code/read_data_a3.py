@@ -49,7 +49,7 @@ def prepare_train_test(path_to_data,dataset_name,tr_percentage):
                     ses_no=int(ses_no[:2]) 
                 
 
-                if ses_no <= 8:
+                if ses_no <= round(10*tr_percentage):
                     training_input[tr_counter]=cv2.imread(ses,cv2.IMREAD_GRAYSCALE)
                     training_class[tr_counter]=pers_no
                     tr_counter=tr_counter+1
