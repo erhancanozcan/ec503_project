@@ -25,6 +25,7 @@ import math
 import pandas as pd
 from performance_a3 import obtain_new_features,calculate_accuracy
 from scipy.spatial import distance_matrix
+from identifier import eigen_face
 #%%
 dataset_name="ORL-DATABASE"
 tr_percentage=0.8
@@ -41,55 +42,60 @@ test_input_row=np_test_input.reshape(no_of_test_pictures,height*width)
 
 #plt.imshow(tr_input_row.reshape(200,height,width)[20,],cmap="gray")
 #plt.imshow(test_input_row.reshape(200,height,width)[20,],cmap="gray")
+#accu_list=eigen_face(tr_input_row,test_input_row)
 #%%
+"""
 from disruptor import add_blur_decrease_size
 
 desired_dim=(32,32)
-width,height,np_training_input,np_test_input=add_blur_decrease_size(np_training_input,np_test_input,desired_dim)
+width,height,np_training_input=add_blur_decrease_size(np_training_input,desired_dim,True)
+width,height,np_test_input=add_blur_decrease_size(np_test_input,desired_dim,True)
 #plt.imshow(np_training_input[20,],cmap="gray")
 tr_input_row=np_training_input.reshape(no_of_tr_pictures,height*width)
 test_input_row=np_test_input.reshape(no_of_test_pictures,height*width)
+"""
 #%%
-tr_input_col=np.transpose(tr_input_row)
-test_input_col=np.transpose(test_input_row)
+from disruptor import add_blur_decrease_size
 
-#to calculate average face, we need to calculate average of each row.
-average_face=np.mean(tr_input_col,axis=1)
-#average_face.reshape(10304,1)
+resize_dim=(32,32)
 
-difference_faces=np.transpose(np.array([average_face,]*no_of_tr_pictures))
-difference_faces=tr_input_col-difference_faces
+width,height,np_training_input=add_blur_decrease_size(np_training_input,resize_dim,add_blur=False)
+width,height,np_test_input=add_blur_decrease_size(np_test_input,resize_dim,add_blur=False)
 
-aTa=np.matmul(np.transpose(difference_faces),difference_faces)
-from numpy import linalg as LA
-eig_vals,eig_vecs=LA.eig(aTa)
-#each column of eig_vecs is a eigen vector.
+desired_dim=(16,16)
 
-U=np.matmul(difference_faces,eig_vecs)
-#U is scaled by dividing its length
-length_U=LA.norm(U,2,axis=0)
-U=U/length_U
+width,height,np_training_input_low_qual=add_blur_decrease_size(np_training_input,resize_dim,add_blur=True)
+width,height,np_test_input_low_qual=add_blur_decrease_size(np_test_input,resize_dim,add_blur=True)
+
+resize_dim=(32,32)
+width,height,np_training_input_low_qual=add_blur_decrease_size(np_training_input_low_qual,resize_dim,add_blur=True)
+width,height,np_test_input_low_qual=add_blur_decrease_size(np_test_input_low_qual,resize_dim,add_blur=True)
 
 #%%
-whole_new_features=obtain_new_features(tr_input_col,test_input_col,U,average_face)
+tr_input_row=np_training_input.reshape(no_of_tr_pictures,height*width)
+test_input_row=np_test_input.reshape(no_of_test_pictures,height*width)
+accu_list_high_quality=eigen_face(tr_input_row,test_input_row)
 
-accuracy=calculate_accuracy(whole_new_features,200)
 
-accuracy_list=np.zeros(200)
 
-for cntr in range(200):
-    accuracy_list[cntr]=calculate_accuracy(whole_new_features,cntr)
-    
+tr_input_row=np_training_input.reshape(no_of_tr_pictures,height*width)
+test_input_row=np_test_input_low_qual.reshape(no_of_test_pictures,height*width)
+accu_list_after_restoring_low_quality_via_interpolation=eigen_face(tr_input_row,test_input_row)
 
+#%%
 f, ax = plt.subplots(1)
 ax.set_xlim([0,200])
-ax.set_ylim((0.7,0.98))
+ax.set_ylim((0.4,0.98))
 #f.xlim((0,35))
-ax.plot(range(200),accuracy_list,marker='o',label="Accuracy vs Dimensionality",markersize=3)
-#f.legend()
+ax.plot(range(200),accu_list_high_quality,marker='o',label="Accuracy vs Dimensionality",markersize=3)
+ax.plot(range(200),accu_list_after_restoring_low_quality_via_interpolation,marker='o',label="Accuracy vs Dimensionality",markersize=3)
+f.legend(["accuracy_high_quality","accuracy_after_restoring_low_quality_via_interpolation"],loc='lower right',bbox_to_anchor=(0.87, 0.2))
 ax.set_xlabel("Dimensionality")
 ax.set_ylabel("Rank1 Identification Accuracy")
-f.suptitle('Figure4: Accuracy vs Dimensionality', fontsize=12)
+f.suptitle('Accuracy vs Dimensionality', fontsize=12)
 f
+
+
+#%%
 
 
