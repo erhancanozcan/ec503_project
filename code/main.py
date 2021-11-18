@@ -26,6 +26,8 @@ import pandas as pd
 from performance_a3 import obtain_new_features,calculate_accuracy
 from scipy.spatial import distance_matrix
 from identifier import eigen_face
+#from skimage.util.shape import view_as_windows
+from sklearn.feature_extraction import image
 #%%
 dataset_name="ORL-DATABASE"
 tr_percentage=0.8
@@ -83,6 +85,38 @@ test_input_row=np_test_input_low_qual.reshape(no_of_test_pictures,height*width)
 accu_list_after_restoring_low_quality_via_interpolation=eigen_face(tr_input_row,test_input_row)
 
 #%%
+from SVR import get_patches
+from sklearn.svm import SVR
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+
+w_size=(5,5)
+"""
+#model is huge it never stops. try to train svr on single image.
+x,y=get_patches(np_training_input,resize_dim,w_size)
+
+regr = make_pipeline(StandardScaler(), SVR(C=1.0, epsilon=0.2))
+regr.fit(x, y)
+"""
+
+np_test_input_SVR=np.zeros(np.shape(np_test_input_low_qual))
+from SVR import get_patches_single_image
+x,y=get_patches_single_image(np_test_input_low_qual[0,],resize_dim,w_size)
+
+
+#By visual inspection, we can observe that training SVR on single image is not useful.
+regr = make_pipeline(SVR(C=10, epsilon=1,kernel='rbf',degree=5))
+regr.fit(x, y)
+prediction=regr.predict(x)
+prediction=prediction.reshape(height,width)
+plt.imshow(prediction,cmap="gray")
+#see the original image
+y=y.reshape(height,width)
+plt.imshow(y,cmap="gray")
+
+
+
+#%%
 f, ax = plt.subplots(1)
 ax.set_xlim([0,200])
 ax.set_ylim((0.4,0.98))
@@ -94,6 +128,38 @@ ax.set_xlabel("Dimensionality")
 ax.set_ylabel("Rank1 Identification Accuracy")
 f.suptitle('Accuracy vs Dimensionality', fontsize=12)
 f
+
+
+#%%
+
+window_size=(5,5)
+
+
+tmp=int(window_size[0]-1)
+one_tmp=int(tmp/2)
+
+y=np.zeros(width*height*len(np_training_input))
+x=np.zeros((width*height*len(np_training_input),window_size[0]*window_size[1]))
+
+
+for z in range (len(np_training_input)):
+    array_tmp=z*len(np_training_input)
+    img=np_training_input[z,]
+    zimg = np.zeros((height+tmp, width+tmp))
+    zimg[one_tmp:height+one_tmp, one_tmp:width+one_tmp] = img
+    
+    patches = image.extract_patches_2d(zimg, window_size)
+    
+    
+    
+    #y=np.zeros(len(patches))
+    #x=np.zeros((len(patches),window_size[0]*window_size[1]))
+    for i in range (height):
+        for j in range (width):
+            y[array_tmp+i*j+j]=img[i,j]
+            x[array_tmp+i*j+j]=patches[i*j+j].flatten()
+        
+        
 
 
 #%%
