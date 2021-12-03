@@ -10,7 +10,7 @@ from sklearn.feature_extraction import image
 import numpy as np
 
 
-def get_patches(np_training_input,desired_dim,window_size=(5,5)):
+def get_patches(np_training_input,np_training_output,desired_dim,window_size=(5,5)):
     
     width=desired_dim[0]
     height=desired_dim[1]
@@ -24,18 +24,19 @@ def get_patches(np_training_input,desired_dim,window_size=(5,5)):
     for z in range (len(np_training_input)):
         array_tmp=z*len(np_training_input)
         img=np_training_input[z,]
+        img_y=np_training_output[z,]
         zimg = np.zeros((height+tmp, width+tmp))
         zimg[one_tmp:height+one_tmp, one_tmp:width+one_tmp] = img
         
         patches = image.extract_patches_2d(zimg, window_size)
         
         
-        
+        y[z*width*height:(z+1)*width*height]=img_y.flatten()
         #y=np.zeros(len(patches))
         #x=np.zeros((len(patches),window_size[0]*window_size[1]))
         for i in range (height):
             for j in range (width):
-                y[array_tmp+i*j+j]=img[i,j]
+                #y[array_tmp+i*j+j]=img_y[i,j]
                 x[array_tmp+i*j+j]=patches[i*j+j].flatten()
                 
     

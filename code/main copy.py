@@ -7,7 +7,7 @@ Created on Fri Nov 12 03:26:04 2021
 """
 path="/Users/can/Desktop/ec503_project/"
 #%%
-
+from os import listdir
 import os
 #path_to_data="/Users/can/Desktop/ec503_project/ORL-DATABASE"
 path_to_data=path+"data"
@@ -28,6 +28,7 @@ from scipy.spatial import distance_matrix
 from identifier import eigen_face
 #from skimage.util.shape import view_as_windows
 from sklearn.feature_extraction import image
+from spams import trainDL
 #%%
 dataset_name="ORL-DATABASE"
 tr_percentage=0.8
@@ -63,59 +64,54 @@ resize_dim=(32,32)
 
 width,height,np_training_input=add_blur_decrease_size(np_training_input,resize_dim,add_blur=False)
 width,height,np_test_input=add_blur_decrease_size(np_test_input,resize_dim,add_blur=False)
-
+#plt.imshow(np_training_input[20,],cmap="gray")
 desired_dim=(16,16)
 
 width,height,np_training_input_low_qual=add_blur_decrease_size(np_training_input,resize_dim,add_blur=True)
 width,height,np_test_input_low_qual=add_blur_decrease_size(np_test_input,resize_dim,add_blur=True)
-
+#plt.imshow(np_training_input_low_qual[20,],cmap="gray")
 resize_dim=(32,32)
 width,height,np_training_input_low_qual=add_blur_decrease_size(np_training_input_low_qual,resize_dim,add_blur=True)
 width,height,np_test_input_low_qual=add_blur_decrease_size(np_test_input_low_qual,resize_dim,add_blur=True)
 #%%
-from SVR import get_patches
-from sklearn.svm import SVR
-from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import StandardScaler
+###get patches
+from patch_operations import get_patches_sparse, patch_pruning
+im_size=(32,32)
+window_size=(3,3)
 
-w_size=(7,7)
-how_many_pics_to_train=70
+p_tr_h,_=get_patches_sparse(np_training_input,window_size,im_size)
+p_tr_l,_=get_patches_sparse(np_training_input_low_qual,window_size,im_size)
+
+
+
+
 np.random.seed(0)
-ind=np.arange(len(np_training_input))
-np.random.shuffle(ind)
-ind=ind[:how_many_pics_to_train]
+rnd_idx=np.arange(len(p_tr_h))
+np.random.shuffle(rnd_idx)
+rnd_idx=rnd_idx[:3000]
+dict_size=100
+lmbd=0.1
 
-#model is huge it never stops. try to train svr on single image.
-x,y=get_patches(np_training_input_low_qual[ind,],np_training_input[ind,],resize_dim,w_size)
+Xh=p_tr_h[rnd_idx,:]
+Xl=p_tr_l[rnd_idx,:]
 
-regr = make_pipeline(StandardScaler(), SVR(C=10000.0, epsilon=1,verbose=True))
-regr.fit(x, y)
-#prediction=regr.predict(x)
-prediction=regr.predict(x[:1024])
-prediction=prediction[:1024]
-prediction=prediction.reshape(height,width)
+Xh = np.asfortranarray(Xh)
+Xl = np.asfortranarray(Xl)
 
-#%%
-#image from training
-#what we predicted
-plt.imshow(prediction,cmap="gray")
-#what we expect to see
-plt.imshow(y[:1024].reshape(height,width),cmap="gray")
 
-#what we have before resolution
-plt.imshow(np_training_input_low_qual[ind[0],],cmap="gray")
-#%%
-#image from test
-x,y=get_patches(np_test_input_low_qual,np_test_input,resize_dim,w_size)
-prediction=regr.predict(x[:1024])
-prediction=prediction.reshape(height,width)
-#what we predicted
-plt.imshow(prediction,cmap="gray")
-#what we expect to see
-plt.imshow(y[:1024].reshape(height,width),cmap="gray")
+Dh = trainDL(Xh, K=dict_size, lambda1=lmbd, iter=100)
+Dl = trainDL(Xl, K=dict_size, lambda1=lmbd, iter=100)
 
-#what we have before resolution
-plt.imshow(np_test_input_low_qual[0,],cmap="gray")
+
+from ScSR import ScSR
+from backprojection import backprojection
+lmbd=0.1
+overlap=1
+maxIter=100
+img_sr_y = ScSR(np_test_input[0,], (32,32), 2, Dh, Dl, lmbd, overlap)
+img_sr_y = backprojection(img_sr_y, img_lr_y, maxIter)
+
+
 
 #%%
 tr_input_row=np_training_input.reshape(no_of_tr_pictures,height*width)
@@ -135,17 +131,24 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
 w_size=(7,7)
-"""
-#model is huge it never stops. try to train svr on single image.
-x,y=get_patches(np_training_input[:50,],resize_dim,w_size)
 
-regr = make_pipeline(StandardScaler(), SVR(C=100.0, epsilon=0.2))
+#model is huge it never stops. try to train svr on single image.
+x,y=get_patches(np_training_input_low_qual[:50,],np_training_input[:50,],resize_dim,w_size)
+
+regr = make_pipeline(StandardScaler(), SVR(C=1000000.0, epsilon=1,verbose=True))
 regr.fit(x, y)
 prediction=regr.predict(x)
+prediction=regr.predict(x[:1024])
 prediction=prediction[:1024]
 prediction=prediction.reshape(height,width)
+#what we predicted
 plt.imshow(prediction,cmap="gray")
-"""
+#what we expect to see
+#plt.imshow(y[:1024].reshape(height,width),cmap="gray")
+
+#what we have before resolution
+#plt.imshow(np_training_input_low_qual[1,],cmap="gray")
+
 #%%
 
 np_test_input_SVR=np.zeros(np.shape(np_test_input_low_qual))
@@ -181,7 +184,7 @@ f
 
 #%%
 
-window_size=(5,5)
+window_size=(3,3)
 
 
 tmp=int(window_size[0]-1)
