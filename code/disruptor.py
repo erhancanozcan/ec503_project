@@ -22,7 +22,7 @@ def add_blur_decrease_size_mod(np_training_input,np_test_input,desired_dim):
         gausBlur = cv2.GaussianBlur(tr, (5,5),0)
         #add blur by averaging
         #gausBlur=cv2.blur(tr,(3,3))
-        resized = cv2.resize(gausBlur, desired_dim, interpolation = cv2.INTER_AREA)
+        resized = cv2.resize(gausBlur, desired_dim)
         training_input[i]=resized
     
     for i in range(no_of_test):
@@ -30,7 +30,7 @@ def add_blur_decrease_size_mod(np_training_input,np_test_input,desired_dim):
         gausBlur = cv2.GaussianBlur(tr, (5,5),0)
         #add blur by averaging
         #gausBlur=cv2.blur(tr,(3,3))
-        resized = cv2.resize(gausBlur, desired_dim, interpolation = cv2.INTER_AREA)
+        resized = cv2.resize(gausBlur, desired_dim)
         test_input[i]=resized
         
     
@@ -58,7 +58,7 @@ def add_blur_decrease_size(np_training_input,desired_dim,add_blur=False):
             tr = cv2.GaussianBlur(tr, (3,3),0)
         #add blur by averaging
         #gausBlur=cv2.blur(tr,(3,3))
-        resized = cv2.resize(tr, desired_dim, interpolation = cv2.INTER_AREA)
+        resized = cv2.resize(tr, desired_dim)
         training_input[i]=resized
         
     

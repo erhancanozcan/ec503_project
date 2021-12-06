@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 #%matplotlib inline
 import cv2
-from read_data_a3 import prepare_train_test
+from read_data_a3 import prepare_train_test,prepare_images_att
 #from plot_a3 import plot_eigen_faces,eigen_face_projection,draw_picture_with_n_features
 import math
 import pandas as pd
@@ -31,13 +31,20 @@ from sklearn.feature_extraction import image
 from spams import trainDL
 #%%
 dataset_name="ORL-DATABASE"
-tr_percentage=0.8
+tr_percentage=0.9
 #%%
 #read data and reshape training test input
-width,height,np_training_input,np_test_input,np_training_class,np_test_class=prepare_train_test(path_to_data,dataset_name,tr_percentage)
+#width,height,np_training_input,np_test_input,np_training_class,np_test_class=prepare_train_test(path_to_data,dataset_name,tr_percentage)
+num_people=20
+num_tr=3
+num_te=1
+width,height,np_training_input,np_test_input,np_training_class,np_test_class = prepare_images_att(num_people,num_tr,num_te)
+
+
+
 no_of_tr_pictures=len(np_training_input)
 no_of_test_pictures=len(np_test_input)
-#plt.imshow(np_training_input[20,],cmap="gray")
+#plt.imshow(np_training_input[0,],cmap="gray")
 #plt.imshow(np_test_input[20,],cmap="gray")
 
 tr_input_row=np_training_input.reshape(no_of_tr_pictures,height*width)
@@ -67,16 +74,65 @@ width,height,np_test_input=add_blur_decrease_size(np_test_input,resize_dim,add_b
 #plt.imshow(np_training_input[20,],cmap="gray")
 desired_dim=(16,16)
 
-width,height,np_training_input_low_qual=add_blur_decrease_size(np_training_input,resize_dim,add_blur=True)
-width,height,np_test_input_low_qual=add_blur_decrease_size(np_test_input,resize_dim,add_blur=True)
+width,height,np_training_input_low_qual=add_blur_decrease_size(np_training_input,desired_dim,add_blur=False)
+width,height,np_test_input_low_qual=add_blur_decrease_size(np_test_input,desired_dim,add_blur=False)
 #plt.imshow(np_training_input_low_qual[20,],cmap="gray")
 resize_dim=(32,32)
-width,height,np_training_input_low_qual=add_blur_decrease_size(np_training_input_low_qual,resize_dim,add_blur=True)
-width,height,np_test_input_low_qual=add_blur_decrease_size(np_test_input_low_qual,resize_dim,add_blur=True)
+width,height,np_training_input_low_qual=add_blur_decrease_size(np_training_input_low_qual,resize_dim,add_blur=False)
+width,height,np_test_input_low_qual=add_blur_decrease_size(np_test_input_low_qual,resize_dim,add_blur=False)
+#%%
+from SVR import get_patches,get_patches_single_image
+from sklearn.svm import SVR
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+
+w_size=(5,5)
+#model is huge it never stops. try to train svr on single image.
+x,y=get_patches(np_training_input_low_qual,np_training_input,resize_dim,w_size)
+#%%
+regr = make_pipeline(StandardScaler(), SVR(C=100000.0, epsilon=1,verbose=True))
+regr.fit(x, y)
+#%%
+p_no=1
+
+x_p,y_p=get_patches_single_image(np_training_input_low_qual[(p_no-1)*num_tr],np_training_input[(p_no-1)*num_tr],resize_dim,w_size)
+prediction=regr.predict(x_p)
+prediction=prediction.reshape(height,width)
+#what we predicted
+plt.imshow(prediction,cmap="gray")
+#what we expect to see
+plt.imshow(y_p.reshape(height,width),cmap="gray")
+
+#what we have before resolution
+plt.imshow(np_training_input_low_qual[(p_no-1)*num_tr],cmap="gray")
+#%%
+p_no=1
+
+x_p,y_p=get_patches_single_image(np_test_input_low_qual[(p_no-1)*num_te],np_test_input[(p_no-1)*num_te],resize_dim,w_size)
+prediction=regr.predict(x_p)
+prediction=prediction.reshape(height,width)
+#what we predicted
+plt.imshow(prediction,cmap="gray")
+#what we expect to see
+plt.imshow(y_p.reshape(height,width),cmap="gray")
+
+#what we have before resolution
+plt.imshow(np_test_input_low_qual[(p_no-1)*num_te],cmap="gray")
+
+
+#%%
+#image from training
+#what we predicted
+plt.imshow(prediction,cmap="gray")
+#what we expect to see
+plt.imshow(y[:1024].reshape(height,width),cmap="gray")
+
+#what we have before resolution
+plt.imshow(np_training_input_low_qual[0,],cmap="gray")
 #%%
 ###get patches
 from patch_operations import get_patches_sparse, patch_pruning
-im_size=(32,32)
+im_size=(64,64)
 window_size=(3,3)
 
 p_tr_h,_=get_patches_sparse(np_training_input,window_size,im_size)
@@ -105,12 +161,15 @@ Dl = trainDL(Xl, K=dict_size, lambda1=lmbd, iter=100)
 
 from ScSR import ScSR
 from backprojection import backprojection
-lmbd=0.1
+lmbd=5.1
 overlap=1
 maxIter=100
-img_sr_y = ScSR(np_test_input[0,], (32,32), 2, Dh, Dl, lmbd, overlap)
-img_sr_y = backprojection(img_sr_y, img_lr_y, maxIter)
+img_sr_y = ScSR(np_test_input_low_qual[0,], (32,32), 2, Dh, Dl, lmbd, overlap)
+img_sr_y = backprojection(img_sr_y, np_test_input_low_qual[0,], maxIter)
 
+plt.imshow(img_sr_y,cmap="gray")
+plt.imshow(np_test_input[0,],cmap="gray")
+plt.imshow(np_test_input_low_qual[0,],cmap="gray")
 
 
 #%%

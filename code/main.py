@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 #%matplotlib inline
 import cv2
-from read_data_a3 import prepare_train_test
+from read_data_a3 import prepare_train_test,prepare_images_att
 #from plot_a3 import plot_eigen_faces,eigen_face_projection,draw_picture_with_n_features
 import math
 import pandas as pd
@@ -36,7 +36,7 @@ tr_percentage=0.8
 width,height,np_training_input,np_test_input,np_training_class,np_test_class=prepare_train_test(path_to_data,dataset_name,tr_percentage)
 no_of_tr_pictures=len(np_training_input)
 no_of_test_pictures=len(np_test_input)
-#plt.imshow(np_training_input[20,],cmap="gray")
+#plt.imshow(np_training_input[9,],cmap="gray")
 #plt.imshow(np_test_input[20,],cmap="gray")
 
 tr_input_row=np_training_input.reshape(no_of_tr_pictures,height*width)
@@ -63,23 +63,23 @@ resize_dim=(32,32)
 
 width,height,np_training_input=add_blur_decrease_size(np_training_input,resize_dim,add_blur=False)
 width,height,np_test_input=add_blur_decrease_size(np_test_input,resize_dim,add_blur=False)
-
+#plt.imshow(np_training_input[20,],cmap="gray")
 desired_dim=(16,16)
 
-width,height,np_training_input_low_qual=add_blur_decrease_size(np_training_input,resize_dim,add_blur=True)
-width,height,np_test_input_low_qual=add_blur_decrease_size(np_test_input,resize_dim,add_blur=True)
-
+width,height,np_training_input_low_qual=add_blur_decrease_size(np_training_input,desired_dim,add_blur=False)
+width,height,np_test_input_low_qual=add_blur_decrease_size(np_test_input,desired_dim,add_blur=False)
+#plt.imshow(np_training_input_low_qual[20,],cmap="gray")
 resize_dim=(32,32)
-width,height,np_training_input_low_qual=add_blur_decrease_size(np_training_input_low_qual,resize_dim,add_blur=True)
-width,height,np_test_input_low_qual=add_blur_decrease_size(np_test_input_low_qual,resize_dim,add_blur=True)
+width,height,np_training_input_low_qual=add_blur_decrease_size(np_training_input_low_qual,resize_dim,add_blur=False)
+width,height,np_test_input_low_qual=add_blur_decrease_size(np_test_input_low_qual,resize_dim,add_blur=False)
 #%%
 from SVR import get_patches
 from sklearn.svm import SVR
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
-w_size=(7,7)
-how_many_pics_to_train=70
+w_size=(5,5)
+how_many_pics_to_train=30
 np.random.seed(0)
 ind=np.arange(len(np_training_input))
 np.random.shuffle(ind)
@@ -87,8 +87,8 @@ ind=ind[:how_many_pics_to_train]
 
 #model is huge it never stops. try to train svr on single image.
 x,y=get_patches(np_training_input_low_qual[ind,],np_training_input[ind,],resize_dim,w_size)
-
-regr = make_pipeline(StandardScaler(), SVR(C=10000.0, epsilon=1,verbose=True))
+#%%
+regr = make_pipeline(StandardScaler(), SVR(C=1000000.0, epsilon=1,verbose=True))
 regr.fit(x, y)
 #prediction=regr.predict(x)
 prediction=regr.predict(x[:1024])
@@ -104,6 +104,9 @@ plt.imshow(y[:1024].reshape(height,width),cmap="gray")
 
 #what we have before resolution
 plt.imshow(np_training_input_low_qual[ind[0],],cmap="gray")
+#%%
+
+
 #%%
 #image from test
 x,y=get_patches(np_test_input_low_qual,np_test_input,resize_dim,w_size)

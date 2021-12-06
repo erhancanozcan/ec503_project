@@ -41,8 +41,7 @@ def get_patches(np_training_input,np_training_output,desired_dim,window_size=(5,
                 
     
     return(x,y)
-
-def get_patches_single_image(np_training_input,desired_dim,window_size=(5,5)):
+def get_patches_single_image(np_training_input,a,desired_dim,window_size=(5,5)):
     
     width=desired_dim[0]
     height=desired_dim[1]
@@ -70,5 +69,5 @@ def get_patches_single_image(np_training_input,desired_dim,window_size=(5,5)):
             #y[i*j+j]=img[i,j]
             x[i*j+j]=patches[i*j+j].flatten()
                 
-    y=img.flatten()
+    y=a.flatten()
     return(x,y)
