@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
 
-def eigen_face(tr_input_row,test_input_row):
+def eigen_face(tr_input_row,test_input_row,num_person,tr_pic_p_person,te_pic_p_person):
 
     no_of_tr_pictures=len(tr_input_row)
     no_of_test_pictures=len(test_input_row)
