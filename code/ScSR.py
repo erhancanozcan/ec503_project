@@ -5,7 +5,7 @@ from skimage.io import imread
 from skimage.color import rgb2ycbcr
 from skimage.transform import resize
 import pickle
-from featuresign import fss_yang
+from ec503_project.code.featuresign import fss_yang
 from scipy.signal import convolve2d
 from tqdm import tqdm
 
