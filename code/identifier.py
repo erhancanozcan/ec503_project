@@ -7,7 +7,7 @@ Created on Wed Nov 17 19:28:40 2021
 """
 import numpy as np
 import pandas as pd
-from performance_a3 import obtain_new_features,calculate_accuracy
+from ec503_project.code.performance_a3 import obtain_new_features,calculate_accuracy
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 

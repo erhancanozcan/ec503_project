@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 from scipy.spatial import distance_matrix
 
-from plot_a3 import eigen_face_projection
+from ec503_project.code.plot_a3 import eigen_face_projection
 
 def obtain_new_features(tr_input_col,test_input_col,U,average_face):
     no_tr=tr_input_col.shape[1]
@@ -36,9 +36,11 @@ def obtain_new_features(tr_input_col,test_input_col,U,average_face):
     #input_data=pd.DataFrame(data=whole_new_features)
     return whole_new_features
 
-def calculate_accuracy(whole_new_features,no_of_features):
+def calculate_accuracy(whole_new_features,no_of_features,num_person,tr_pic_p_person,te_pic_p_person):
     n_row=whole_new_features.shape[0]
+    #print(n_row)
     no_tr=whole_new_features.shape[1]
+    #print(no_tr)
     #first no_of_features many features selected.
     partial_features=whole_new_features[:,:no_of_features]
     
@@ -55,11 +57,15 @@ def calculate_accuracy(whole_new_features,no_of_features):
     #                          tr5,6,7,8,9 = test,5,6,7,8,9...
     predictions=np.argmin(data_distance, axis=1)
     
-    how_many_tr_pic_per_person=10*(no_tr/n_row)
+    
+    #how_many_tr_pic_per_person=10*(no_tr/n_row)
+    how_many_tr_pic_per_person=tr_pic_p_person
     which_person=np.floor(predictions/how_many_tr_pic_per_person)+1
     
-    real_person=(np.arange(40))+1
-    real_person=np.tile(real_person,int(10-how_many_tr_pic_per_person))
+    #real_person=(np.arange(40))+1
+    real_person=(np.arange(num_person))+1
+    #real_person=np.tile(real_person,int(10-how_many_tr_pic_per_person))
+    real_person=np.tile(real_person,te_pic_p_person)
     real_person=np.sort(real_person)
     
     accuracy=sum(which_person==real_person)/float(n_row-no_tr)
