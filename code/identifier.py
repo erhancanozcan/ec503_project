@@ -39,12 +39,12 @@ def eigen_face(tr_input_row,test_input_row,num_person,tr_pic_p_person,te_pic_p_p
     
     whole_new_features=obtain_new_features(tr_input_col,test_input_col,U,average_face)
     
-    accuracy=calculate_accuracy(whole_new_features,200)
+    accuracy=calculate_accuracy(whole_new_features,200,num_person,tr_pic_p_person,te_pic_p_person)
     
     accuracy_list=np.zeros(200)
     
     for cntr in range(200):
-        accuracy_list[cntr]=calculate_accuracy(whole_new_features,cntr)
+        accuracy_list[cntr]=calculate_accuracy(whole_new_features,cntr,num_person,tr_pic_p_person,te_pic_p_person)
         
     
     f, ax = plt.subplots(1)
